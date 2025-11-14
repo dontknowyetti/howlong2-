@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>How Long Is The Line?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 420px;
+      background: #020617;
+      border-radius: 18px;
+      padding: 18px 18px 22px;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.55);
+      border: 1px solid #1e293b;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .store {
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    .pill {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid #1d4ed8;
+      color: #bfdbfe;
+      background: rgba(37, 99, 235, 0.12);
+    }
+
+    .layout-summary {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+
+    /* Lane switcher */
+    .lane-switcher {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: 999px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      margin-bottom: 10px;
+    }
+
+    .lane-chip {
+      font-size: 0.75rem;
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: background 0.12s ease, color 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .lane-chip.active {
+      background: rgba(37, 99, 235, 0.18);
+      color: #e5e7eb;
+    }
+
+    /* Status card */
+    .status-card {
+      border-radius: 14px;
+      padding: 12px 12px 14px;
+      margin-bottom: 14px;
+      background: radial-gradient(circle at top left, #1d2535, #020617);
+      border: 1px solid #1f2937;
+    }
+
+    .status-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    .status-value {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    .dot-none { background: #22c55e; }    /* green */
+    .dot-short { background: #a3e635; }   /* lime */
+    .dot-medium { background: #eab308; }  /* yellow */
+    .dot-long { background: #f97316; }    /* orange */
+
+    /* Progress bar */
+    .progress-wrapper {
+      margin-top: 4px;
+      margin-bottom: 6px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      transition: width 0.18s ease;
+    }
+
+    .fill-none { background: #22c55e; }
+    .fill-short { background: #a3e635; }
+    .fill-medium { background: #eab308; }
+    .fill-long { background: #f97316; }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: #6b7280;
+    }
+
+    /* Section buttons */
+    .sections {
+      margin-bottom: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .section-btn {
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 8px 10px;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      cursor: pointer;
+      transition: border 0.12s ease, background 0.12s ease, transform 0.05s ease;
+    }
+
+    .section-btn .label {
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+
+    .section-btn .sub {
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+
+    .section-btn:hover {
+      border-color: #4b5563;
+      background: #030712;
+    }
+
+    .section-btn:active {
+      transform: scale(0.98);
+    }
+
+    .section-btn.selected {
+      border-color: #2563eb;
+      background: rgba(37, 99, 235, 0.16);
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 480px) {
+      .app { padding: 16px; border-radius: 16px; }
+      .lane-switcher { width: 100%; justify-content: space-between; }
+      .lane-chip { flex: 1; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div>
+        <div class="title">How long is the line?</div>
+        <div class="store" id="store-name">ALDI Selly Oak</div>
+      </div>
+      <div class="pill">Live check-in</div>
+    </header>
+
+    <div class="layout-summary" id="layout-summary">
+      Manned tills: 6 · Self-checkouts: 2
+    </div>
+
+    <div class="lane-switcher" id="lane-switcher">
+      <button class="lane-chip active" data-lane="tills">Main tills</button>
+      <button class="lane-chip" data-lane="sco1">Self-checkout 1</button>
+      <button class="lane-chip" data-lane="sco2">Self-checkout 2</button>
+    </div>
+
+    <section class="status-card">
+      <div class="status-label" id="lane-label">Current report · Main tills</div>
+      <div class="status-value">
+        <div class="dot" id="status-dot"></div>
+        <span id="status-text">No reports yet</span>
+      </div>
+
+      <div class="progress-wrapper">
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="meta">
+        <span id="last-updated">Last updated: —</span>
+        <span id="local-only">Local demo only</span>
+      </div>
+    </section>
+
+    <section class="sections" id="sections">
+      <!-- Buttons are injected per lane by JS -->
+    </section>
+
+    <p class="hint">
+      Pick your lane, then tap how far the queue goes (tills) or how many spaces are free (self-checkout).
+      Data is saved per lane on this device only.
+    </p>
+  </div>
+
+  <script>
+    // Store + lanes
+    const STORE_CONFIG = {
+      id: "aldi_selly_oak",
+      name: "ALDI Selly Oak",
+      mannedTills: 6,
+      selfCheckouts: 2,
+      lanes: [
+        { id: "tills", label: "Main tills" },
+        { id: "sco1", label: "Self-checkout 1" },
+        { id: "sco2", label: "Self-checkout 2" }
+      ]
+    };
+
+    // Per-lane section configs
+    const SECTION_CONFIG = {
+      // Tills still use aisle distance
+      tills: [
+        {
+          id: "none",
+          label: "No queue",
+          description: "Walk straight up to a till",
+          fill: 5,
+          intensity: "none"
+        },
+        {
+          id: "front",
+          label: "Front of aisle",
+          description: "Just spilling into the aisle",
+          fill: 25,
+          intensity: "short"
+        },
+        {
+          id: "middle",
+          label: "Middle of aisle",
+          description: "Halfway down the aisle",
+          fill: 50,
+          intensity: "medium"
+        },
+        {
+          id: "back",
+          label: "Back of aisle",
+          description: "Near the end of the aisle",
+          fill: 75,
+          intensity: "long"
+        },
+        {
+          id: "beyond",
+          label: "Beyond aisle / outside",
+          description: "Wrapped into next aisle or outside",
+          fill: 100,
+          intensity: "long"
+        }
+      ],
+
+      // Self-checkout lanes now ordered from worst -> best
+      sco1: [
+        {
+          id: "sco_full",
+          label: "Packed / long wait",
+          description: "All machines busy, long queue",
+          fill: 100,
+          intensity: "long"
+        },
+        {
+          id: "sco_tight",
+          label: "No spaces, 1–3 waiting",
+          description: "Small queue at the machines",
+          fill: 70,
+          intensity: "medium"
+        },
+        {
+          id: "sco_some",
+          label: "1–2 spaces free",
+          description: "You’ll probably get one soon",
+          fill: 40,
+          intensity: "short"
+        },
+        {
+          id: "sco_plenty",
+          label: "3+ spaces free",
+          description: "Plenty of free machines",
+          fill: 15,
+          intensity: "none"
+        }
+      ],
+      sco2: [
+        {
+          id: "sco_full",
+          label: "Packed / long wait",
+          description: "All machines busy, long queue",
+          fill: 100,
+          intensity: "long"
+        },
+        {
+          id: "sco_tight",
+          label: "No spaces, 1–3 waiting",
+          description: "Small queue at the machines",
+          fill: 70,
+          intensity: "medium"
+        },
+        {
+          id: "sco_some",
+          label: "1–2 spaces free",
+          description: "You’ll probably get one soon",
+          fill: 40,
+          intensity: "short"
+        },
+        {
+          id: "sco_plenty",
+          label: "3+ spaces free",
+          description: "Plenty of free machines",
+          fill: 15,
+          intensity: "none"
+        }
+      ]
+    };
+
+    const STORAGE_PREFIX = "queue_section_" + STORE_CONFIG.id + "_";
+    let currentLaneId = "tills";
+
+    function laneStorageKey(laneId) {
+      return STORAGE_PREFIX + laneId;
+    }
+
+    function getSectionsForLane(laneId) {
+      return SECTION_CONFIG[laneId] || SECTION_CONFIG["tills"];
+    }
+
+    function loadStatus(laneId) {
+      try {
+        const raw = localStorage.getItem(laneStorageKey(laneId));
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveStatus(laneId, sectionId) {
+      const payload = {
+        sectionId,
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem(laneStorageKey(laneId), JSON.stringify(payload));
+      return payload;
+    }
+
+    function formatTimeAgo(isoString) {
+      if (!isoString) return "Last updated: —";
+      const then = new Date(isoString);
+      const now = new Date();
+      const diffMin = Math.floor((now - then) / 60000);
+
+      if (diffMin < 1) return "Last updated: just now";
+      if (diffMin === 1) return "Last updated: 1 minute ago";
+      if (diffMin < 60) return `Last updated: ${diffMin} minutes ago`;
+
+      const diffHours = Math.floor(diffMin / 60);
+      if (diffHours === 1) return "Last updated: 1 hour ago";
+      if (diffHours < 24) return `Last updated: ${diffHours} hours ago`;
+
+      const diffDays = Math.floor(diffHours / 24);
+      return diffDays === 1
+        ? "Last updated: 1 day ago"
+        : `Last updated: ${diffDays} days ago`;
+    }
+
+    function getLaneConfig(laneId) {
+      return STORE_CONFIG.lanes.find(l => l.id === laneId);
+    }
+
+    function getSectionForLane(laneId, sectionId) {
+      const sections = getSectionsForLane(laneId);
+      return sections.find(s => s.id === sectionId);
+    }
+
+    function renderSectionsForLane(laneId) {
+      const container = document.getElementById("sections");
+      container.innerHTML = "";
+
+      const sections = getSectionsForLane(laneId);
+      sections.forEach(section => {
+        const btn = document.createElement("button");
+        btn.className = "section-btn";
+        btn.dataset.section = section.id;
+
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "label";
+        labelSpan.textContent = section.label;
+
+        const subSpan = document.createElement("span");
+        subSpan.className = "sub";
+        subSpan.textContent = section.description;
+
+        btn.appendChild(labelSpan);
+        btn.appendChild(subSpan);
+
+        btn.addEventListener("click", () => {
+          saveStatus(currentLaneId, section.id);
+          applyStatusToUI(currentLaneId);
+        });
+
+        container.appendChild(btn);
+      });
+    }
+
+    function applyStatusToUI(laneId) {
+      const record = loadStatus(laneId);
+      const statusTextEl = document.getElementById("status-text");
+      const dotEl = document.getElementById("status-dot");
+      const lastUpdatedEl = document.getElementById("last-updated");
+      const laneLabelEl = document.getElementById("lane-label");
+      const progressFillEl = document.getElementById("progress-fill");
+
+      const lane = getLaneConfig(laneId);
+      laneLabelEl.textContent = `Current report · ${lane.label}`;
+
+      // reset visuals
+      dotEl.className = "dot";
+      progressFillEl.className = "progress-fill";
+      progressFillEl.style.width = "0%";
+      document.querySelectorAll(".section-btn").forEach(btn =>
+        btn.classList.remove("selected")
+      );
+
+      if (!record) {
+        statusTextEl.textContent = "No reports yet";
+        lastUpdatedEl.textContent = "Last updated: —";
+        return;
+      }
+
+      const section = getSectionForLane(laneId, record.sectionId);
+      if (!section) {
+        statusTextEl.textContent = "No reports yet";
+        lastUpdatedEl.textContent = "Last updated: —";
+        return;
+      }
+
+      statusTextEl.textContent =
+        laneId === "tills"
+          ? `Queue reaches: ${section.label}`
+          : `Self-checkout: ${section.label}`;
+
+      const intensity = section.intensity; // none / short / medium / long
+
+      if (intensity) {
+        dotEl.classList.add("dot-" + intensity);
+        progressFillEl.classList.add("fill-" + intensity);
+      }
+
+      progressFillEl.style.width = section.fill + "%";
+      lastUpdatedEl.textContent = formatTimeAgo(record.updatedAt);
+
+      const activeBtn = document.querySelector(
+        `.section-btn[data-section="${section.id}"]`
+      );
+      if (activeBtn) activeBtn.classList.add("selected");
+    }
+
+    function switchLane(laneId) {
+      currentLaneId = laneId;
+
+      document.querySelectorAll(".lane-chip").forEach(chip => {
+        chip.classList.toggle("active", chip.dataset.lane === laneId);
+      });
+
+      renderSectionsForLane(laneId);
+      applyStatusToUI(laneId);
+    }
+
+    function init() {
+      document.getElementById("store-name").textContent = STORE_CONFIG.name;
+      document.getElementById("layout-summary").textContent =
+        `Manned tills: ${STORE_CONFIG.mannedTills} · Self-checkouts: ${STORE_CONFIG.selfCheckouts}`;
+
+      document.querySelectorAll(".lane-chip").forEach(chip => {
+        chip.addEventListener("click", () => switchLane(chip.dataset.lane));
+      });
+
+      switchLane(currentLaneId);
+
+      setInterval(() => {
+        const record = loadStatus(currentLaneId);
+        if (record) {
+          document.getElementById("last-updated").textContent =
+            formatTimeAgo(record.updatedAt);
+        }
+      }, 30000);
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
