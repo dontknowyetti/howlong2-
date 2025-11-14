@@ -28,6 +28,7 @@
       padding: 18px 18px 22px;
       box-shadow: 0 18px 45px rgba(0,0,0,0.55);
       border: 1px solid #1e293b;
+      touch-action: pan-y; /* allow vertical scroll but we handle horizontal swipe */
     }
 
     .app-header {
@@ -248,7 +249,7 @@
   </style>
 </head>
 <body>
-  <div class="app">
+  <div class="app" id="app-root">
     <header class="app-header">
       <div>
         <div class="title">How long is the line?</div>
@@ -293,8 +294,8 @@
     </section>
 
     <p class="hint">
-      Pick your lane, then tap a section.  
-      The bar shows the average of all your taps for that lane.
+      Swipe left/right to switch lanes.  
+      Tap a section to report. Bar = average of your taps for that lane.
     </p>
   </div>
 
@@ -315,25 +316,23 @@
     // Per-lane sections
     const SECTION_CONFIG = {
       tills: [
-        { id: "none", label: "No queue", description: "Walk straight up", fill: 5, intensity: "none" },
-        { id: "front", label: "Front of aisle", description: "Just into aisle", fill: 25, intensity: "short" },
-        { id: "middle", label: "Middle of aisle", description: "Halfway down", fill: 50, intensity: "medium" },
-        { id: "back", label: "Back of aisle", description: "Near end", fill: 75, intensity: "long" },
-        { id: "beyond", label: "Beyond aisle", description: "Wrapped/Outside", fill: 100, intensity: "long" }
+        { id: "none",   label: "No queue",             description: "Walk straight up",       fill: 5,   intensity: "none" },
+        { id: "front",  label: "Front of aisle",       description: "Just into aisle",        fill: 25,  intensity: "short" },
+        { id: "middle", label: "Middle of aisle",      description: "Halfway down",           fill: 50,  intensity: "medium" },
+        { id: "back",   label: "Back of aisle",        description: "Near end",               fill: 75,  intensity: "long" },
+        { id: "beyond", label: "Beyond aisle",         description: "Wrapped / outside",      fill: 100, intensity: "long" }
       ],
-
       sco1: [
-        { id: "sco_full", label: "Packed / long wait", description: "All machines busy", fill: 100, intensity: "long" },
-        { id: "sco_tight", label: "No spaces, 1–3 waiting", description: "Small queue", fill: 70, intensity: "medium" },
-        { id: "sco_some", label: "1–2 spaces free", description: "Probably get one", fill: 40, intensity: "short" },
-        { id: "sco_plenty", label: "3+ spaces free", description: "Plenty of machines", fill: 15, intensity: "none" }
+        { id: "sco_full",   label: "Packed / long wait",        description: "All machines busy",       fill: 100, intensity: "long" },
+        { id: "sco_tight",  label: "No spaces, 1–3 waiting",    description: "Small queue",             fill: 70,  intensity: "medium" },
+        { id: "sco_some",   label: "1–2 spaces free",           description: "Probably get one soon",   fill: 40,  intensity: "short" },
+        { id: "sco_plenty", label: "3+ spaces free",            description: "Plenty of machines",      fill: 15,  intensity: "none" }
       ],
-
       sco2: [
-        { id: "sco_full", label: "Packed / long wait", description: "All machines busy", fill: 100, intensity: "long" },
-        { id: "sco_tight", label: "No spaces, 1–3 waiting", description: "Small queue", fill: 70, intensity: "medium" },
-        { id: "sco_some", label: "1–2 spaces free", description: "Probably get one", fill: 40, intensity: "short" },
-        { id: "sco_plenty", label: "3+ spaces free", description: "Plenty of machines", fill: 15, intensity: "none" }
+        { id: "sco_full",   label: "Packed / long wait",        description: "All machines busy",       fill: 100, intensity: "long" },
+        { id: "sco_tight",  label: "No spaces, 1–3 waiting",    description: "Small queue",             fill: 70,  intensity: "medium" },
+        { id: "sco_some",   label: "1–2 spaces free",           description: "Probably get one soon",   fill: 40,  intensity: "short" },
+        { id: "sco_plenty", label: "3+ spaces free",            description: "Plenty of machines",      fill: 15,  intensity: "none" }
       ]
     };
 
@@ -349,13 +348,14 @@
         const obj = JSON.parse(raw);
         if (!obj.votes) obj.votes = {};
         return obj;
-      } catch { return null; }
+      } catch {
+        return null;
+      }
     }
 
     function registerVote(laneId, sectionId) {
       const key = laneStorageKey(laneId);
       let record = loadStatus(laneId) || { votes: {} };
-
       record.votes[sectionId] = (record.votes[sectionId] || 0) + 1;
       record.updatedAt = new Date().toISOString();
       localStorage.setItem(key, JSON.stringify(record));
@@ -370,13 +370,13 @@
     function formatTimeAgo(iso) {
       if (!iso) return "Last updated: —";
       const t = new Date(iso);
-      const diff = (new Date() - t) / 60000;
-      if (diff < 1) return "Last updated: just now";
-      if (diff < 60) return `Last updated: ${Math.floor(diff)} minutes ago`;
-      const h = diff / 60;
-      if (h < 24) return `Last updated: ${Math.floor(h)} hours ago`;
-      const d = h / 24;
-      return `Last updated: ${Math.floor(d)} days ago`;
+      const diffMin = Math.floor((new Date() - t) / 60000);
+      if (diffMin < 1) return "Last updated: just now";
+      if (diffMin < 60) return `Last updated: ${diffMin} minutes ago`;
+      const diffH = Math.floor(diffMin / 60);
+      if (diffH < 24) return `Last updated: ${diffH} hours ago`;
+      const diffD = Math.floor(diffH / 24);
+      return `Last updated: ${diffD} days ago`;
     }
 
     function getSectionsForLane(laneId) {
@@ -390,17 +390,14 @@
         const btn = document.createElement("button");
         btn.className = "section-btn";
         btn.dataset.section = section.id;
-
         btn.innerHTML = `
           <span class="label">${section.label}</span>
           <span class="sub">${section.description}</span>
         `;
-
         btn.addEventListener("click", () => {
           registerVote(currentLaneId, section.id);
           applyStatusToUI(currentLaneId);
         });
-
         box.appendChild(btn);
       });
     }
@@ -413,8 +410,10 @@
       const updated = document.getElementById("last-updated");
       const label = document.getElementById("lane-label");
 
-      label.textContent = `Current report · ${STORE_CONFIG.lanes.find(l => l.id === laneId).label}`;
+      const lane = STORE_CONFIG.lanes.find(l => l.id === laneId);
+      label.textContent = `Current report · ${lane.label}`;
 
+      // reset visuals
       dot.className = "dot";
       fillBar.className = "progress-fill";
       fillBar.style.width = "0%";
@@ -428,56 +427,114 @@
 
       const sections = getSectionsForLane(laneId);
 
-      let total = 0, weighted = 0, top = null, topCount = 0;
+      let totalVotes = 0;
+      let weightedFill = 0;
+      let topSection = null;
+      let topCount = 0;
 
       for (const s of sections) {
-        const n = record.votes[s.id] || 0;
-        if (n > 0) {
-          total += n;
-          weighted += n * s.fill;
-          if (n > topCount) { top = s; topCount = n; }
+        const count = record.votes[s.id] || 0;
+        if (count > 0) {
+          totalVotes += count;
+          weightedFill += count * s.fill;
+          if (count > topCount) {
+            topCount = count;
+            topSection = s;
+          }
         }
       }
 
-      if (total === 0) {
+      if (totalVotes === 0) {
         text.textContent = "No reports yet";
         updated.textContent = "Last updated: —";
         return;
       }
 
-      const avg = weighted / total;
+      const avgFill = weightedFill / totalVotes;
 
-      // find closest section for label/intensity
+      // Closest section to average for label + colour
       let closest = sections[0];
-      let bestDiff = Math.abs(closest.fill - avg);
+      let bestDiff = Math.abs(sections[0].fill - avgFill);
       for (const s of sections) {
-        const d = Math.abs(s.fill - avg);
-        if (d < bestDiff) { closest = s; bestDiff = d; }
+        const diff = Math.abs(s.fill - avgFill);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          closest = s;
+        }
       }
 
       text.textContent =
         laneId === "tills"
-          ? `Queue around: ${closest.label} (${total} reports)`
-          : `Self-checkout: ${closest.label} (${total} reports)`;
+          ? `Queue around: ${closest.label} (${totalVotes} reports)`
+          : `Self-checkout: ${closest.label} (${totalVotes} reports)`;
 
       dot.classList.add("dot-" + closest.intensity);
       fillBar.classList.add("fill-" + closest.intensity);
-      fillBar.style.width = `${avg}%`;
+      fillBar.style.width = `${Math.max(0, Math.min(100, avgFill))}%`;
 
       updated.textContent = formatTimeAgo(record.updatedAt);
 
-      if (top) {
-        const b = document.querySelector(`.section-btn[data-section="${top.id}"]`);
-        if (b) b.classList.add("selected");
+      if (topSection) {
+        const topBtn = document.querySelector(
+          `.section-btn[data-section="${topSection.id}"]`
+        );
+        if (topBtn) topBtn.classList.add("selected");
       }
     }
 
-    function switchLane(id) {
-      currentLaneId = id;
-      document.querySelectorAll(".lane-chip").forEach(c =>
-        c.classList.toggle("active", c.dataset.lane === id));
-      renderSectionsForLane(id);
-      applyStatusToUI(id);
+    function switchLane(laneId) {
+      currentLaneId = laneId;
+
+      document.querySelectorAll(".lane-chip").forEach(chip =>
+        chip.classList.toggle("active", chip.dataset.lane === laneId)
+      );
+
+      renderSectionsForLane(laneId);
+      applyStatusToUI(laneId);
+    }
+
+    // --- Swipe handling (left/right to change lane) ---
+    let touchStartX = null;
+    let touchStartY = null;
+    const SWIPE_THRESHOLD = 40; // px
+
+    function handleTouchStart(e) {
+      if (!e.touches || e.touches.length === 0) return;
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+    }
+
+    function handleTouchEnd(e) {
+      if (touchStartX === null || touchStartY === null) return;
+      if (!e.changedTouches || e.changedTouches.length === 0) return;
+
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+
+      // Only treat as horizontal swipe if mostly horizontal and big enough
+      if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) {
+          // swipe left -> next lane
+          changeLaneByOffset(1);
+        } else {
+          // swipe right -> previous lane
+          changeLaneByOffset(-1);
+        }
+      }
+
+      touchStartX = null;
+      touchStartY = null;
+    }
+
+    function changeLaneByOffset(offset) {
+      const lanes = STORE_CONFIG.lanes;
+      const currentIndex = lanes.findIndex(l => l.id === currentLaneId);
+      if (currentIndex === -1) return;
+      const newIndex = (currentIndex + offset + lanes.length) % lanes.length;
+      const newLaneId = lanes[newIndex].id;
+      switchLane(newLaneId);
     }
 
     function init() {
@@ -485,13 +542,18 @@
       document.getElementById("layout-summary").textContent =
         `Manned tills: ${STORE_CONFIG.mannedTills} · Self-checkouts: ${STORE_CONFIG.selfCheckouts}`;
 
-      document.querySelectorAll(".lane-chip").forEach(c =>
-        c.addEventListener("click", () => switchLane(c.dataset.lane))
-      );
+      document.querySelectorAll(".lane-chip").forEach(chip => {
+        chip.addEventListener("click", () => switchLane(chip.dataset.lane));
+      });
 
       document.getElementById("reset-btn").addEventListener("click", () => {
         resetLane(currentLaneId);
       });
+
+      // Attach swipe listeners to main app container
+      const appRoot = document.getElementById("app-root");
+      appRoot.addEventListener("touchstart", handleTouchStart, { passive: true });
+      appRoot.addEventListener("touchend", handleTouchEnd, { passive: true });
 
       switchLane(currentLaneId);
 
