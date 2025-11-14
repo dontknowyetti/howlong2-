@@ -259,7 +259,7 @@
 
       <div class="meta">
         <span id="last-updated">Last updated: —</span>
-        <span id="local-only">Local demo only</span>
+        <span id="local-only">Local votes on this device</span>
       </div>
     </section>
 
@@ -268,8 +268,7 @@
     </section>
 
     <p class="hint">
-      Pick your lane, then tap how far the queue goes (tills) or how many spaces are free (self-checkout).
-      Data is saved per lane on this device only.
+      Pick your lane, then tap a section. The bar is based on the average of all your taps for that lane on this device.
     </p>
   </div>
 
@@ -289,7 +288,7 @@
 
     // Per-lane section configs
     const SECTION_CONFIG = {
-      // Tills still use aisle distance
+      // Tills use aisle distance
       tills: [
         {
           id: "none",
@@ -328,7 +327,7 @@
         }
       ],
 
-      // Self-checkout lanes now ordered from worst -> best
+      // Self-checkout lanes: worst -> best
       sco1: [
         {
           id: "sco_full",
@@ -405,19 +404,28 @@
     function loadStatus(laneId) {
       try {
         const raw = localStorage.getItem(laneStorageKey(laneId));
-        return raw ? JSON.parse(raw) : null;
+        if (!raw) return null;
+        const record = JSON.parse(raw);
+        if (!record.votes) record.votes = {};
+        return record;
       } catch {
         return null;
       }
     }
 
-    function saveStatus(laneId, sectionId) {
-      const payload = {
-        sectionId,
-        updatedAt: new Date().toISOString()
-      };
-      localStorage.setItem(laneStorageKey(laneId), JSON.stringify(payload));
-      return payload;
+    // Register a vote and store aggregated counts
+    function registerVote(laneId, sectionId) {
+      const key = laneStorageKey(laneId);
+      let record = loadStatus(laneId) || { votes: {} };
+
+      if (typeof record.votes[sectionId] !== "number") {
+        record.votes[sectionId] = 0;
+      }
+      record.votes[sectionId] += 1;
+      record.updatedAt = new Date().toISOString();
+
+      localStorage.setItem(key, JSON.stringify(record));
+      return record;
     }
 
     function formatTimeAgo(isoString) {
@@ -444,11 +452,6 @@
       return STORE_CONFIG.lanes.find(l => l.id === laneId);
     }
 
-    function getSectionForLane(laneId, sectionId) {
-      const sections = getSectionsForLane(laneId);
-      return sections.find(s => s.id === sectionId);
-    }
-
     function renderSectionsForLane(laneId) {
       const container = document.getElementById("sections");
       container.innerHTML = "";
@@ -471,7 +474,7 @@
         btn.appendChild(subSpan);
 
         btn.addEventListener("click", () => {
-          saveStatus(currentLaneId, section.id);
+          registerVote(currentLaneId, section.id);
           applyStatusToUI(currentLaneId);
         });
 
@@ -498,38 +501,73 @@
         btn.classList.remove("selected")
       );
 
-      if (!record) {
+      if (!record || !record.votes) {
         statusTextEl.textContent = "No reports yet";
         lastUpdatedEl.textContent = "Last updated: —";
         return;
       }
 
-      const section = getSectionForLane(laneId, record.sectionId);
-      if (!section) {
+      const sections = getSectionsForLane(laneId);
+
+      let totalVotes = 0;
+      let weightedFill = 0;
+      let topSection = null;
+      let topCount = 0;
+
+      sections.forEach(section => {
+        const count = record.votes[section.id] || 0;
+        if (count > 0) {
+          totalVotes += count;
+          weightedFill += count * section.fill;
+          if (count > topCount) {
+            topCount = count;
+            topSection = section;
+          }
+        }
+      });
+
+      if (totalVotes === 0) {
         statusTextEl.textContent = "No reports yet";
         lastUpdatedEl.textContent = "Last updated: —";
         return;
       }
+
+      const avgFill = weightedFill / totalVotes;
+
+      // Find section whose fill is closest to avgFill for the label
+      let closestSection = sections[0];
+      let minDiff = Math.abs(sections[0].fill - avgFill);
+      sections.forEach(section => {
+        const diff = Math.abs(section.fill - avgFill);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestSection = section;
+        }
+      });
 
       statusTextEl.textContent =
         laneId === "tills"
-          ? `Queue reaches: ${section.label}`
-          : `Self-checkout: ${section.label}`;
+          ? `Queue around: ${closestSection.label} (${totalVotes} reports)`
+          : `Self-checkout: ${closestSection.label} (${totalVotes} reports)`;
 
-      const intensity = section.intensity; // none / short / medium / long
+      const intensity = closestSection.intensity || "none";
 
       if (intensity) {
         dotEl.classList.add("dot-" + intensity);
         progressFillEl.classList.add("fill-" + intensity);
       }
 
-      progressFillEl.style.width = section.fill + "%";
+      const clampedFill = Math.max(0, Math.min(100, avgFill));
+      progressFillEl.style.width = clampedFill + "%";
       lastUpdatedEl.textContent = formatTimeAgo(record.updatedAt);
 
-      const activeBtn = document.querySelector(
-        `.section-btn[data-section="${section.id}"]`
-      );
-      if (activeBtn) activeBtn.classList.add("selected");
+      // Highlight most-voted section
+      if (topSection) {
+        const activeBtn = document.querySelector(
+          `.section-btn[data-section="${topSection.id}"]`
+        );
+        if (activeBtn) activeBtn.classList.add("selected");
+      }
     }
 
     function switchLane(laneId) {
@@ -556,7 +594,7 @@
 
       setInterval(() => {
         const record = loadStatus(currentLaneId);
-        if (record) {
+        if (record && record.updatedAt) {
           document.getElementById("last-updated").textContent =
             formatTimeAgo(record.updatedAt);
         }
