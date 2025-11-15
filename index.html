@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>How Long Is The Line?</title>
+  <title>Qasper · How long is the line?</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
+      background: #e9e5de;
+      color: #111827;
     }
 
     body {
@@ -22,317 +22,377 @@
 
     .app {
       width: 100%;
-      max-width: 420px;
-      background: #020617;
-      border-radius: 18px;
-      padding: 18px 18px 22px;
-      box-shadow: 0 18px 45px rgba(0,0,0,0.55);
-      border: 1px solid #1e293b;
-      touch-action: pan-y; /* allow vertical scroll but we handle horizontal swipe */
+      max-width: 360px;
+      background: #f4f1eb;
+      border-radius: 4px;
+      padding: 40px 24px 32px;
+      box-shadow: 0 0 0 1px #ddd4c6;
+      text-align: center;
+      touch-action: pan-y;
     }
 
-    .app-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
+    .brand {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-bottom: 8px;
     }
 
     .title {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-
-    .store {
-      font-size: 0.85rem;
-      color: #9ca3af;
-    }
-
-    .pill {
-      font-size: 0.7rem;
+      font-size: 1.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid #1d4ed8;
-      color: #bfdbfe;
-      background: rgba(37, 99, 235, 0.12);
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #6b7280;
     }
 
     .layout-summary {
-      font-size: 0.75rem;
-      color: #6b7280;
-      margin-bottom: 10px;
+      margin-top: 4px;
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+
+    /* View toggle */
+    .view-toggle {
+      margin-top: 18px;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .view-btn {
+      border: 1px solid #d1d5db;
+      background: transparent;
+      padding: 4px 10px;
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .view-btn.active {
+      background: #111827;
+      color: #f4f1eb;
+      border-color: #111827;
     }
 
     /* Lane switcher */
     .lane-switcher {
+      margin: 20px auto 20px;
       display: inline-flex;
-      padding: 4px;
       border-radius: 999px;
-      background: #020617;
-      border: 1px solid #1f2937;
-      margin-bottom: 10px;
+      border: 1px solid #d1d5db;
+      padding: 3px;
+      background: #f4f1eb;
+      gap: 2px;
     }
 
     .lane-chip {
-      font-size: 0.75rem;
-      padding: 5px 9px;
-      border-radius: 999px;
       border: none;
       background: transparent;
+      padding: 6px 10px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
       color: #9ca3af;
+      border-radius: 999px;
       cursor: pointer;
-      transition: background 0.12s ease, color 0.12s ease;
-      white-space: nowrap;
     }
 
     .lane-chip.active {
-      background: rgba(37, 99, 235, 0.18);
-      color: #e5e7eb;
+      background: #111827;
+      color: #f4f1eb;
     }
 
     /* Status card */
     .status-card {
-      border-radius: 14px;
-      padding: 12px 12px 14px;
-      margin-bottom: 14px;
-      background: radial-gradient(circle at top left, #1d2535, #020617);
-      border: 1px solid #1f2937;
+      margin-bottom: 20px;
     }
 
     .status-label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
       color: #9ca3af;
-      margin-bottom: 4px;
-    }
-
-    .status-value {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.95rem;
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-    }
-
-    .dot-none { background: #22c55e; }
-    .dot-short { background: #a3e635; }
-    .dot-medium { background: #eab308; }
-    .dot-long { background: #f97316; }
-
-    /* Progress bar */
-    .progress-wrapper {
-      margin-top: 4px;
       margin-bottom: 6px;
     }
 
+    .status-text {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    /* Progress bar like the poster */
     .progress-track {
       width: 100%;
-      height: 10px;
-      border-radius: 999px;
-      background: #020617;
-      border: 1px solid #1f2937;
+      height: 18px;
+      background: #111827;
+      margin: 0 auto 4px;
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      box-sizing: border-box;
+    }
+
+    .progress-inner {
+      width: 100%;
+      height: 6px;
+      background: transparent;
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
       width: 0%;
-      border-radius: 999px;
-      transition: width 0.18s ease;
+      background: #d44e27;
+      transition: width 0.2s ease;
     }
 
-    .fill-none { background: #22c55e; }
-    .fill-short { background: #a3e635; }
-    .fill-medium { background: #eab308; }
-    .fill-long { background: #f97316; }
-
     .meta {
+      margin-top: 10px;
+      font-size: 0.62rem;
+      color: #9ca3af;
       display: flex;
       justify-content: space-between;
-      margin-top: 6px;
-      font-size: 0.78rem;
-      color: #6b7280;
     }
 
     /* Reset button */
     .reset-btn {
+      margin: 24px 0 18px;
       width: 100%;
-      padding: 8px;
-      border-radius: 10px;
-      border: 1px solid #1f2937;
-      background: #0f172a;
-      color: #e5e7eb;
-      font-size: 0.8rem;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px dashed #d1d5db;
+      background: transparent;
+      color: #9ca3af;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
       cursor: pointer;
-      margin-bottom: 10px;
-      transition: background 0.12s ease, border 0.12s ease;
     }
 
     .reset-btn:hover {
-      background: #1e293b;
-      border-color: #334155;
+      border-style: solid;
+      color: #4b5563;
     }
 
-    .reset-btn:active {
-      transform: scale(0.98);
-    }
-
-    /* Section buttons */
+    /* Sections – minimal cards */
     .sections {
-      margin-bottom: 10px;
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
+      text-align: left;
     }
 
     .section-btn {
-      border-radius: 12px;
-      border: 1px solid #1f2937;
-      padding: 8px 10px;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 0.8rem;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 2px;
+      border-radius: 2px;
+      border: 1px solid #e5e7eb;
+      padding: 8px 8px 7px;
+      background: #f9f7f2;
+      color: #111827;
+      font-size: 0.78rem;
       cursor: pointer;
-      transition: border 0.12s ease, background 0.12s ease, transform 0.05s ease;
     }
 
     .section-btn .label {
       font-weight: 600;
-      font-size: 0.82rem;
+      font-size: 0.78rem;
     }
 
     .section-btn .sub {
       font-size: 0.7rem;
       color: #9ca3af;
-    }
-
-    .section-btn:hover {
-      border-color: #4b5563;
-      background: #030712;
-    }
-
-    .section-btn:active {
-      transform: scale(0.98);
+      margin-top: 2px;
     }
 
     .section-btn.selected {
-      border-color: #2563eb;
-      background: rgba(37, 99, 235, 0.16);
+      border-color: #111827;
+      background: #f4f1eb;
     }
 
     .hint {
-      font-size: 0.75rem;
+      margin-top: 18px;
+      font-size: 0.64rem;
+      color: #9ca3af;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* At-a-glance view */
+    .glance-view {
+      margin-top: 24px;
+      text-align: left;
+    }
+
+    .glance-row {
+      padding: 10px 0;
+      border-top: 1px solid #e5e7eb;
+      cursor: pointer;
+    }
+
+    .glance-row:last-child {
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .glance-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+    }
+
+    .glance-lane {
+      font-weight: 600;
+    }
+
+    .glance-summary {
+      font-size: 0.7rem;
       color: #6b7280;
-      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .glance-track {
+      width: 100%;
+      height: 10px;
+      background: #111827;
+      padding: 0 3px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+    }
+
+    .glance-inner {
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .glance-fill {
+      height: 100%;
+      width: 0%;
+      background: #d44e27;
+      transition: width 0.2s ease;
+    }
+
+    .glance-meta {
       margin-top: 4px;
+      font-size: 0.64rem;
+      color: #9ca3af;
+      display: flex;
+      justify-content: space-between;
     }
 
     @media (max-width: 480px) {
-      .app { padding: 16px; border-radius: 16px; }
-      .lane-switcher { width: 100%; justify-content: space-between; }
-      .lane-chip { flex: 1; text-align: center; }
+      .app {
+        padding: 32px 18px 26px;
+      }
+      .sections {
+        grid-template-columns: 1fr 1fr;
+      }
     }
   </style>
 </head>
 <body>
   <div class="app" id="app-root">
-    <header class="app-header">
-      <div>
-        <div class="title">How long is the line?</div>
-        <div class="store" id="store-name">ALDI Selly Oak</div>
-      </div>
-      <div class="pill">Live check-in</div>
-    </header>
-
+    <div class="brand">QASPER</div>
+    <div class="title">HOW LONG<br />IS THE LINE?</div>
+    <div class="subtitle" id="store-name">ALDI · SELLY OAK</div>
     <div class="layout-summary" id="layout-summary">
-      Manned tills: 6 · Self-checkouts: 2
+      MANNED TILLS · SELF-CHECKOUT
     </div>
 
-    <div class="lane-switcher" id="lane-switcher">
-      <button class="lane-chip active" data-lane="tills">Main tills</button>
-      <button class="lane-chip" data-lane="sco1">Self-checkout 1</button>
-      <button class="lane-chip" data-lane="sco2">Self-checkout 2</button>
+    <div class="view-toggle">
+      <button id="detail-view-btn" class="view-btn active">DETAIL VIEW</button>
+      <button id="glance-view-btn" class="view-btn">AT A GLANCE</button>
     </div>
 
-    <section class="status-card">
-      <div class="status-label" id="lane-label">Current report · Main tills</div>
-      <div class="status-value">
-        <div class="dot" id="status-dot"></div>
-        <span id="status-text">No reports yet</span>
+    <!-- Detail view -->
+    <div id="detail-view">
+      <div class="lane-switcher" id="lane-switcher">
+        <button class="lane-chip active" data-lane="tills">MAIN TILLS</button>
+        <button class="lane-chip" data-lane="sco1">SELF CHECK 1</button>
+        <button class="lane-chip" data-lane="sco2">SELF CHECK 2</button>
       </div>
 
-      <div class="progress-wrapper">
+      <section class="status-card">
+        <div class="status-label" id="lane-label">CURRENT REPORT · MAIN TILLS</div>
+        <div class="status-text" id="status-text">No reports yet</div>
+
         <div class="progress-track">
-          <div class="progress-fill" id="progress-fill"></div>
+          <div class="progress-inner">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
         </div>
-      </div>
 
-      <div class="meta">
-        <span id="last-updated">Last updated: —</span>
-        <span id="local-only">Local votes on this device</span>
-      </div>
-    </section>
+        <div class="meta">
+          <span id="last-updated">Last updated: —</span>
+          <span id="local-only">Local reports only</span>
+        </div>
+      </section>
 
-    <button id="reset-btn" class="reset-btn">Reset this lane</button>
+      <button id="reset-btn" class="reset-btn">Reset this lane</button>
 
-    <section class="sections" id="sections">
-      <!-- Buttons injected by JS -->
-    </section>
+      <section class="sections" id="sections">
+        <!-- Buttons injected by JS -->
+      </section>
 
-    <p class="hint">
-      Swipe left/right to switch lanes.  
-      Tap a section to report. Bar = average of your taps for that lane.
-    </p>
+      <p class="hint">
+        Swipe left / right to switch lanes · Tap to report
+      </p>
+    </div>
+
+    <!-- At-a-glance view -->
+    <div id="glance-view" class="glance-view" style="display:none;">
+      <!-- Rows injected by JS -->
+    </div>
   </div>
 
   <script>
-    // Store + lanes
     const STORE_CONFIG = {
       id: "aldi_selly_oak",
-      name: "ALDI Selly Oak",
+      name: "ALDI · SELLY OAK",
       mannedTills: 6,
       selfCheckouts: 2,
       lanes: [
         { id: "tills", label: "Main tills" },
-        { id: "sco1", label: "Self-checkout 1" },
-        { id: "sco2", label: "Self-checkout 2" }
+        { id: "sco1", label: "Self checkout 1" },
+        { id: "sco2", label: "Self checkout 2" }
       ]
     };
 
-    // Per-lane sections
     const SECTION_CONFIG = {
       tills: [
-        { id: "none",   label: "No queue",             description: "Walk straight up",       fill: 5,   intensity: "none" },
-        { id: "front",  label: "Front of aisle",       description: "Just into aisle",        fill: 25,  intensity: "short" },
-        { id: "middle", label: "Middle of aisle",      description: "Halfway down",           fill: 50,  intensity: "medium" },
-        { id: "back",   label: "Back of aisle",        description: "Near end",               fill: 75,  intensity: "long" },
-        { id: "beyond", label: "Beyond aisle",         description: "Wrapped / outside",      fill: 100, intensity: "long" }
+        { id: "none",   label: "No queue",        description: "Walk straight up",  fill: 5,   intensity: "none" },
+        { id: "front",  label: "Front of aisle",  description: "Just into aisle",   fill: 25,  intensity: "short" },
+        { id: "middle", label: "Middle of aisle", description: "Halfway down",      fill: 50,  intensity: "medium" },
+        { id: "back",   label: "Back of aisle",   description: "Near end",          fill: 75,  intensity: "long" },
+        { id: "beyond", label: "Beyond aisle",    description: "Wrapped / outside", fill: 100, intensity: "long" }
       ],
       sco1: [
-        { id: "sco_full",   label: "Packed / long wait",        description: "All machines busy",       fill: 100, intensity: "long" },
-        { id: "sco_tight",  label: "No spaces, 1–3 waiting",    description: "Small queue",             fill: 70,  intensity: "medium" },
-        { id: "sco_some",   label: "1–2 spaces free",           description: "Probably get one soon",   fill: 40,  intensity: "short" },
-        { id: "sco_plenty", label: "3+ spaces free",            description: "Plenty of machines",      fill: 15,  intensity: "none" }
+        { id: "sco_plenty", label: "3+ spaces free",         description: "Plenty of machines",      fill: 15,  intensity: "none" },
+        { id: "sco_some",   label: "1–2 spaces free",        description: "Probably get one soon",   fill: 40,  intensity: "short" },
+        { id: "sco_tight",  label: "No spaces, 1–3 waiting", description: "Small queue",             fill: 70,  intensity: "medium" },
+        { id: "sco_full",   label: "Packed / long wait",     description: "All machines busy",       fill: 100, intensity: "long" }
       ],
       sco2: [
-        { id: "sco_full",   label: "Packed / long wait",        description: "All machines busy",       fill: 100, intensity: "long" },
-        { id: "sco_tight",  label: "No spaces, 1–3 waiting",    description: "Small queue",             fill: 70,  intensity: "medium" },
-        { id: "sco_some",   label: "1–2 spaces free",           description: "Probably get one soon",   fill: 40,  intensity: "short" },
-        { id: "sco_plenty", label: "3+ spaces free",            description: "Plenty of machines",      fill: 15,  intensity: "none" }
+        { id: "sco_plenty", label: "3+ spaces free",         description: "Plenty of machines",      fill: 15,  intensity: "none" },
+        { id: "sco_some",   label: "1–2 spaces free",        description: "Probably get one soon",   fill: 40,  intensity: "short" },
+        { id: "sco_tight",  label: "No spaces, 1–3 waiting", description: "Small queue",             fill: 70,  intensity: "medium" },
+        { id: "sco_full",   label: "Packed / long wait",     description: "All machines busy",       fill: 100, intensity: "long" }
       ]
     };
 
@@ -365,6 +425,7 @@
     function resetLane(laneId) {
       localStorage.removeItem(laneStorageKey(laneId));
       applyStatusToUI(laneId);
+      renderGlanceView();
     }
 
     function formatTimeAgo(iso) {
@@ -383,76 +444,49 @@
       return SECTION_CONFIG[laneId] || SECTION_CONFIG["tills"];
     }
 
-    function renderSectionsForLane(laneId) {
-      const box = document.getElementById("sections");
-      box.innerHTML = "";
-      getSectionsForLane(laneId).forEach(section => {
-        const btn = document.createElement("button");
-        btn.className = "section-btn";
-        btn.dataset.section = section.id;
-        btn.innerHTML = `
-          <span class="label">${section.label}</span>
-          <span class="sub">${section.description}</span>
-        `;
-        btn.addEventListener("click", () => {
-          registerVote(currentLaneId, section.id);
-          applyStatusToUI(currentLaneId);
-        });
-        box.appendChild(btn);
-      });
-    }
-
-    function applyStatusToUI(laneId) {
+    // Compute summary for a lane: {label, text, avgFill, totalVotes, updatedAt}
+    function getLaneSummary(laneId) {
       const record = loadStatus(laneId);
-      const dot = document.getElementById("status-dot");
-      const text = document.getElementById("status-text");
-      const fillBar = document.getElementById("progress-fill");
-      const updated = document.getElementById("last-updated");
-      const label = document.getElementById("lane-label");
-
       const lane = STORE_CONFIG.lanes.find(l => l.id === laneId);
-      label.textContent = `Current report · ${lane.label}`;
-
-      // reset visuals
-      dot.className = "dot";
-      fillBar.className = "progress-fill";
-      fillBar.style.width = "0%";
-      document.querySelectorAll(".section-btn").forEach(b => b.classList.remove("selected"));
+      const label = lane ? lane.label : laneId;
 
       if (!record || !record.votes) {
-        text.textContent = "No reports yet";
-        updated.textContent = "Last updated: —";
-        return;
+        return {
+          laneId,
+          label,
+          text: "No reports yet",
+          avgFill: 0,
+          totalVotes: 0,
+          updatedAt: null
+        };
       }
 
       const sections = getSectionsForLane(laneId);
-
       let totalVotes = 0;
       let weightedFill = 0;
-      let topSection = null;
-      let topCount = 0;
 
       for (const s of sections) {
         const count = record.votes[s.id] || 0;
         if (count > 0) {
           totalVotes += count;
           weightedFill += count * s.fill;
-          if (count > topCount) {
-            topCount = count;
-            topSection = s;
-          }
         }
       }
 
       if (totalVotes === 0) {
-        text.textContent = "No reports yet";
-        updated.textContent = "Last updated: —";
-        return;
+        return {
+          laneId,
+          label,
+          text: "No reports yet",
+          avgFill: 0,
+          totalVotes: 0,
+          updatedAt: record.updatedAt || null
+        };
       }
 
       const avgFill = weightedFill / totalVotes;
 
-      // Closest section to average for label + colour
+      // Closest section to average
       let closest = sections[0];
       let bestDiff = Math.abs(sections[0].fill - avgFill);
       for (const s of sections) {
@@ -463,17 +497,80 @@
         }
       }
 
-      text.textContent =
+      const text =
         laneId === "tills"
-          ? `Queue around: ${closest.label} (${totalVotes} reports)`
-          : `Self-checkout: ${closest.label} (${totalVotes} reports)`;
+          ? `Queue around: ${closest.label}`
+          : `Self-checkout: ${closest.label}`;
 
-      dot.classList.add("dot-" + closest.intensity);
-      fillBar.classList.add("fill-" + closest.intensity);
-      fillBar.style.width = `${Math.max(0, Math.min(100, avgFill))}%`;
+      return {
+        laneId,
+        label,
+        text,
+        avgFill: avgFill,
+        totalVotes,
+        updatedAt: record.updatedAt || null
+      };
+    }
 
-      updated.textContent = formatTimeAgo(record.updatedAt);
+    function renderSectionsForLane(laneId) {
+      const box = document.getElementById("sections");
+      box.innerHTML = "";
+      getSectionsForLane(laneId).forEach(section => {
+        const btn = document.createElement("button");
+        btn.className = "section-btn";
+        btn.dataset.section = section.id;
+        btn.innerHTML = `
+          <div class="label">${section.label}</div>
+          <div class="sub">${section.description}</div>
+        `;
+        btn.addEventListener("click", () => {
+          registerVote(currentLaneId, section.id);
+          applyStatusToUI(currentLaneId);
+          renderGlanceView();
+        });
+        box.appendChild(btn);
+      });
+    }
 
+    function applyStatusToUI(laneId) {
+      const summary = getLaneSummary(laneId);
+      const text = document.getElementById("status-text");
+      const fillBar = document.getElementById("progress-fill");
+      const updated = document.getElementById("last-updated");
+      const labelEl = document.getElementById("lane-label");
+
+      const lane = STORE_CONFIG.lanes.find(l => l.id === laneId);
+      labelEl.textContent = `CURRENT REPORT · ${lane.label.toUpperCase()}`;
+
+      fillBar.style.width = "0%";
+      document.querySelectorAll(".section-btn").forEach(b =>
+        b.classList.remove("selected")
+      );
+
+      text.textContent =
+        summary.totalVotes === 0
+          ? "No reports yet"
+          : `${summary.text} (${summary.totalVotes} reports)`;
+
+      fillBar.style.width = `${Math.max(0, Math.min(100, summary.avgFill))}%`;
+      updated.textContent = summary.updatedAt
+        ? formatTimeAgo(summary.updatedAt)
+        : "Last updated: —";
+
+      // highlight most-voted section
+      const record = loadStatus(laneId);
+      if (!record || !record.votes) return;
+
+      const sections = getSectionsForLane(laneId);
+      let topSection = null;
+      let topCount = 0;
+      for (const s of sections) {
+        const count = record.votes[s.id] || 0;
+        if (count > topCount) {
+          topCount = count;
+          topSection = s;
+        }
+      }
       if (topSection) {
         const topBtn = document.querySelector(
           `.section-btn[data-section="${topSection.id}"]`
@@ -484,19 +581,87 @@
 
     function switchLane(laneId) {
       currentLaneId = laneId;
-
       document.querySelectorAll(".lane-chip").forEach(chip =>
         chip.classList.toggle("active", chip.dataset.lane === laneId)
       );
-
       renderSectionsForLane(laneId);
       applyStatusToUI(laneId);
     }
 
-    // --- Swipe handling (left/right to change lane) ---
+    // --- At-a-glance rendering ---
+    function renderGlanceView() {
+      const container = document.getElementById("glance-view");
+      container.innerHTML = "";
+
+      STORE_CONFIG.lanes.forEach(lane => {
+        const summary = getLaneSummary(lane.id);
+
+        const row = document.createElement("div");
+        row.className = "glance-row";
+        row.addEventListener("click", () => {
+          showDetailView(lane.id);
+        });
+
+        const header = document.createElement("div");
+        header.className = "glance-header";
+        header.innerHTML = `
+          <span class="glance-lane">${summary.label}</span>
+          <span>${summary.totalVotes > 0 ? summary.totalVotes + " reports" : "No data"}</span>
+        `;
+
+        const summaryEl = document.createElement("div");
+        summaryEl.className = "glance-summary";
+        summaryEl.textContent = summary.text;
+
+        const track = document.createElement("div");
+        track.className = "glance-track";
+        const inner = document.createElement("div");
+        inner.className = "glance-inner";
+        const fill = document.createElement("div");
+        fill.className = "glance-fill";
+        fill.style.width = `${Math.max(0, Math.min(100, summary.avgFill))}%`;
+        inner.appendChild(fill);
+        track.appendChild(inner);
+
+        const meta = document.createElement("div");
+        meta.className = "glance-meta";
+        meta.innerHTML = `
+          <span>${summary.totalVotes > 0 ? "Tap for details" : "No recent reports"}</span>
+          <span>${summary.updatedAt ? formatTimeAgo(summary.updatedAt) : ""}</span>
+        `;
+
+        row.appendChild(header);
+        row.appendChild(summaryEl);
+        row.appendChild(track);
+        row.appendChild(meta);
+
+        container.appendChild(row);
+      });
+    }
+
+    // --- View toggling ---
+    function showDetailView(laneId) {
+      document.getElementById("detail-view").style.display = "";
+      document.getElementById("glance-view").style.display = "none";
+      document.getElementById("detail-view-btn").classList.add("active");
+      document.getElementById("glance-view-btn").classList.remove("active");
+      if (laneId) {
+        switchLane(laneId);
+      }
+    }
+
+    function showGlanceView() {
+      document.getElementById("detail-view").style.display = "none";
+      document.getElementById("glance-view").style.display = "";
+      document.getElementById("detail-view-btn").classList.remove("active");
+      document.getElementById("glance-view-btn").classList.add("active");
+      renderGlanceView();
+    }
+
+    // Swipe between lanes (detail view)
     let touchStartX = null;
     let touchStartY = null;
-    const SWIPE_THRESHOLD = 40; // px
+    const SWIPE_THRESHOLD = 40;
 
     function handleTouchStart(e) {
       if (!e.touches || e.touches.length === 0) return;
@@ -506,22 +671,20 @@
     }
 
     function handleTouchEnd(e) {
-      if (touchStartX === null || touchStartY === null) return;
       if (!e.changedTouches || e.changedTouches.length === 0) return;
+      if (document.getElementById("detail-view").style.display === "none") {
+        // in glance view – ignore swipes
+        touchStartX = null;
+        touchStartY = null;
+        return;
+      }
 
       const t = e.changedTouches[0];
       const dx = t.clientX - touchStartX;
       const dy = t.clientY - touchStartY;
 
-      // Only treat as horizontal swipe if mostly horizontal and big enough
       if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
-        if (dx < 0) {
-          // swipe left -> next lane
-          changeLaneByOffset(1);
-        } else {
-          // swipe right -> previous lane
-          changeLaneByOffset(-1);
-        }
+        changeLaneByOffset(dx < 0 ? 1 : -1);
       }
 
       touchStartX = null;
@@ -530,17 +693,23 @@
 
     function changeLaneByOffset(offset) {
       const lanes = STORE_CONFIG.lanes;
-      const currentIndex = lanes.findIndex(l => l.id === currentLaneId);
-      if (currentIndex === -1) return;
-      const newIndex = (currentIndex + offset + lanes.length) % lanes.length;
-      const newLaneId = lanes[newIndex].id;
-      switchLane(newLaneId);
+      const idx = lanes.findIndex(l => l.id === currentLaneId);
+      if (idx === -1) return;
+      const next = (idx + offset + lanes.length) % lanes.length;
+      switchLane(lanes[next].id);
     }
 
     function init() {
       document.getElementById("store-name").textContent = STORE_CONFIG.name;
       document.getElementById("layout-summary").textContent =
-        `Manned tills: ${STORE_CONFIG.mannedTills} · Self-checkouts: ${STORE_CONFIG.selfCheckouts}`;
+        `MANNED TILLS: ${STORE_CONFIG.mannedTills} · SELF-CHECKOUTS: ${STORE_CONFIG.selfCheckouts}`;
+
+      document
+        .getElementById("detail-view-btn")
+        .addEventListener("click", () => showDetailView(currentLaneId));
+      document
+        .getElementById("glance-view-btn")
+        .addEventListener("click", showGlanceView);
 
       document.querySelectorAll(".lane-chip").forEach(chip => {
         chip.addEventListener("click", () => switchLane(chip.dataset.lane));
@@ -550,12 +719,12 @@
         resetLane(currentLaneId);
       });
 
-      // Attach swipe listeners to main app container
       const appRoot = document.getElementById("app-root");
       appRoot.addEventListener("touchstart", handleTouchStart, { passive: true });
       appRoot.addEventListener("touchend", handleTouchEnd, { passive: true });
 
       switchLane(currentLaneId);
+      renderGlanceView();
 
       setInterval(() => {
         const rec = loadStatus(currentLaneId);
@@ -563,6 +732,7 @@
           document.getElementById("last-updated").textContent =
             formatTimeAgo(rec.updatedAt);
         }
+        renderGlanceView();
       }, 30000);
     }
 
